@@ -10,7 +10,11 @@ import android.graphics.Path;
 import android.graphics.RectF;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by goodn on 2017-06-04.
@@ -21,6 +25,8 @@ public class MyGraphView extends View {
     private Paint paint;
 
     private Paint textPaint;
+
+    private Paint linePaint;
 
     private RectF yRect;
 
@@ -48,10 +54,24 @@ public class MyGraphView extends View {
 
     private Path path;
 
+    private int maxValue = 100;
+
+    private List<Integer> listValue;
+
+    private List<Float> pointRectList;
+
+    private int selectLine = 0;
 
     public MyGraphView(Context context) {
         super(context);
         this.context = context;
+        init();
+    }
+
+    public MyGraphView(Context context, List<Integer> listValue) {
+        super(context);
+        this.context = context;
+        this.listValue = listValue;
         init();
     }
 
@@ -64,6 +84,11 @@ public class MyGraphView extends View {
     private void init() {
         paint = new Paint();
 
+        linePaint = new Paint();
+        linePaint.setStyle(Paint.Style.STROKE);
+        linePaint.setStrokeCap(Paint.Cap.ROUND);
+        linePaint.setColor(getResources().getColor(R.color.color_801b89c0));
+        linePaint.setStrokeWidth(Util.convertDpToPixel(4f));
         path = new Path();
 
         textPaint = new Paint();
@@ -73,12 +98,11 @@ public class MyGraphView extends View {
         yRect = new RectF();
         xRect = new RectF();
         textRect = new RectF();
-
         strYValue = new String[]{"100", "80", "60", "40", "20"};
+        pointRectList = new ArrayList<>();
 
-        defaultIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.bp_grap_dot_red);
-        selectIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.bp_graph_double_dot_red);
-
+        defaultIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.graph_dot_blue);
+        selectIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.graph_double_dot_blue);
 
     }
 
@@ -97,57 +121,70 @@ public class MyGraphView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
 
-
         drawYAxis(canvas);
-        drawXAxis(canvas);
-
-        paint.setColor(Color.RED);
-        paint.setStrokeWidth(Util.convertDpToPixel(3f));
-        canvas.drawPath(path, paint);
-
+        drawXAxisAndValue(canvas);
+        drawPathLine(canvas);
 
     }
 
+    private void drawPathLine(Canvas canvas) {
 
-    private void drawXAxis(Canvas canvas) {
+        canvas.drawPath(path, linePaint);
+    }
+
+    private void drawXAxisAndValue(Canvas canvas) {
 
         float xRectStart = getLeft() + graphWidth * 0.11f;
         float xRectWidth = graphWidth * 0.078f;
         float xRectMargin = graphWidth * 0.16f;
-
+        String text = "2017\n03.24";
 //        path.moveTo(xRect.centerX(), graphStartY + 100);
 
         for (int i = 0; i < 6; i++) {
 
             xRect.set(xRectStart, graphStartY, xRectStart + xRectWidth, graphHeight);
             if (i == 0) {
-                path.moveTo(xRect.centerX(), graphStartY + 100);
-                path.lineTo(xRect.centerX(), graphStartY + 100);
-
+                path.moveTo(xRect.centerX() + defaultIcon.getWidth() / 2 - 20, graphStartY + defaultIcon.getHeight() / 2 + getRatio(listValue.get(i)));
+            } else {
+                path.lineTo(xRect.centerX() + defaultIcon.getWidth() / 2 - 20, graphStartY + defaultIcon.getHeight() / 2 + getRatio(listValue.get(i)));
             }
             textRect.set(xRectStart, endYAxis + graphHeight * 0.18f, xRectStart + xRectWidth, graphHeight);
-            String text = "2017\n03.24";
-            drawMultiLineText(canvas, textRect, text);
-            drawPoint(canvas, xRect);
+            drawMultiLineText(canvas, textRect, text, i);
+            if (i == selectLine) {
+                canvas.drawLine(xRect.centerX(), graphStartY, xRect.centerX(), endYAxis + graphHeight * 0.12f, paint);
+                canvas.drawBitmap(selectIcon, xRect.centerX() - 20, graphStartY + getRatio(listValue.get(i)), null);
+            } else {
+                canvas.drawBitmap(defaultIcon, xRect.centerX() - 20, graphStartY + getRatio(listValue.get(i)), null);
+            }
+//            drawPoint(canvas, xRect, getRatio(listValue.get(i)));
+            pointRectList.add(xRect.centerX());
             xRectStart = xRectStart + xRectMargin;
         }
 
-
     }
 
-    private void drawPoint(Canvas canvas, RectF xRect) {
-
-        path.lineTo(xRect.centerX(), graphStartY + 100);
-        canvas.drawBitmap(defaultIcon, xRect.centerX(), graphStartY + 100, null);
-
+    private float getRatio(int value) {
+        float step = 6.0f;
+        float maxYPoint = graphHeight * 0.07f;
+        if (value == maxValue) {
+            return maxYPoint;
+        } else {
+            return maxYPoint + ((maxValue - value) * step);
+        }
     }
 
-    private void drawMultiLineText(Canvas canvas, RectF textRect, String text) {
+    private void drawMultiLineText(Canvas canvas, RectF textRect, String text, int position) {
+
         float textSize = textPaint.descent() - textPaint.ascent();
         float lineSpace = textSize * 0.2f;
         float x = textRect.left + 5;
         float y = textRect.top;
         for (String line : text.split("\n")) {
+            if (position == selectLine) {
+                textPaint.setColor(Color.parseColor("#4a4a4a"));
+            } else {
+                textPaint.setColor(Color.parseColor("#9b9b9b"));
+            }
             canvas.drawText(line, x, y, textPaint);
             x = textRect.left;
             y += (textSize + lineSpace);
@@ -183,5 +220,23 @@ public class MyGraphView extends View {
         canvas.drawLine(getLeft(), endYAxis + graphHeight * 0.12f, graphWidth, endYAxis + graphHeight * 0.12f, paint);
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int action = event.getAction();
+        float x = event.getX();
 
+        switch (action) {
+            case MotionEvent.ACTION_UP:
+
+                for (int i = 0; i < 6; i++) {
+                    if (pointRectList.get(i) + 100 > x && pointRectList.get(i) - 100 < x) {
+                        selectLine = i;
+                        invalidate();
+                        return true;
+                    }
+                }
+                break;
+        }
+        return true;
+    }
 }
