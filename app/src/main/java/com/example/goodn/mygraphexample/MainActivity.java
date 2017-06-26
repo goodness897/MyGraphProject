@@ -2,6 +2,7 @@ package com.example.goodn.mygraphexample;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 
 import java.util.ArrayList;
@@ -23,7 +24,15 @@ public class MainActivity extends AppCompatActivity {
         list.add(40);
         list.add(30);
         list.add(60);
-        llGraph = (LinearLayout) findViewById(R.id.ll_graph);
-        llGraph.addView(new MyGraphView(this, list));
+        list.add(60);
+        list.add(60);
+        list.add(60);
+        list.add(60);
+        list.add(60);
+        list.add(60);
+        HorizontalScrollView horizontalScrollView = (HorizontalScrollView) findViewById(R.id.hsv_graph);
+//        llGraph = (LinearLayout) findViewById(R.id.ll_graph);
+        MyGraphView myGraphView = new MyGraphView(this, list);
+        horizontalScrollView.addView(myGraphView);
     }
 }

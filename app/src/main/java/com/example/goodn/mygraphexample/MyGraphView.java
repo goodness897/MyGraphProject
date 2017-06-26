@@ -61,6 +61,7 @@ public class MyGraphView extends View {
     private List<Float> pointRectList;
 
     private int selectLine = 0;
+    private int totalWidth;
 
     public MyGraphView(Context context) {
         super(context);
@@ -108,13 +109,20 @@ public class MyGraphView extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        graphWidth = MeasureSpec.getSize(widthMeasureSpec);
+//        graphWidth = MeasureSpec.getSize(widthMeasureSpec);
+        graphWidth = Util.convertDpToPixel(360);
         graphHeight = MeasureSpec.getSize(heightMeasureSpec);
 
         graphStartX = getLeft() + graphWidth * 0.02f;
         graphStartY = getTop();
 
+        float xRectStart = getLeft() + graphWidth * 0.11f;
+        float xRectWidth = graphWidth * 0.078f;
+        float xRectMargin = graphWidth * 0.16f;
+
+        totalWidth = (int) xRectStart + (int) ((xRectWidth + xRectMargin) * (listValue.size() - 4));
+
+        setMeasuredDimension(totalWidth, (int) graphHeight);
 
     }
 
@@ -122,14 +130,28 @@ public class MyGraphView extends View {
     protected void onDraw(Canvas canvas) {
 
         drawYAxis(canvas);
-        drawXAxisAndValue(canvas);
         drawPathLine(canvas);
+        drawXAxisAndValue(canvas);
+
 
     }
 
     private void drawPathLine(Canvas canvas) {
+        float xRectStart = getLeft() + graphWidth * 0.11f;
+        float xRectWidth = graphWidth * 0.078f;
+        float xRectMargin = graphWidth * 0.16f;
+        for (int i = 0; i < listValue.size(); i++) {
 
+            xRect.set(xRectStart, graphStartY, xRectStart + xRectWidth, graphHeight);
+            if (i == 0) {
+                path.moveTo(xRect.centerX() + defaultIcon.getWidth() / 2 - 20, graphStartY + defaultIcon.getHeight() / 2 + getRatio(listValue.get(i)));
+            } else {
+                path.lineTo(xRect.centerX() + defaultIcon.getWidth() / 2 - 20, graphStartY + defaultIcon.getHeight() / 2 + getRatio(listValue.get(i)));
+            }
+            xRectStart = xRectStart + xRectMargin;
+        }
         canvas.drawPath(path, linePaint);
+
     }
 
     private void drawXAxisAndValue(Canvas canvas) {
@@ -140,21 +162,16 @@ public class MyGraphView extends View {
         String text = "2017\n03.24";
 //        path.moveTo(xRect.centerX(), graphStartY + 100);
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < listValue.size(); i++) {
 
             xRect.set(xRectStart, graphStartY, xRectStart + xRectWidth, graphHeight);
-            if (i == 0) {
-                path.moveTo(xRect.centerX() + defaultIcon.getWidth() / 2 - 20, graphStartY + defaultIcon.getHeight() / 2 + getRatio(listValue.get(i)));
-            } else {
-                path.lineTo(xRect.centerX() + defaultIcon.getWidth() / 2 - 20, graphStartY + defaultIcon.getHeight() / 2 + getRatio(listValue.get(i)));
-            }
             textRect.set(xRectStart, endYAxis + graphHeight * 0.18f, xRectStart + xRectWidth, graphHeight);
             drawMultiLineText(canvas, textRect, text, i);
             if (i == selectLine) {
                 canvas.drawLine(xRect.centerX(), graphStartY, xRect.centerX(), endYAxis + graphHeight * 0.12f, paint);
-                canvas.drawBitmap(selectIcon, xRect.centerX() - 20, graphStartY + getRatio(listValue.get(i)), null);
+                canvas.drawBitmap(selectIcon, xRect.centerX() - selectIcon.getWidth() / 2, graphStartY + getRatio(listValue.get(i)) - selectIcon.getHeight() / 4, null);
             } else {
-                canvas.drawBitmap(defaultIcon, xRect.centerX() - 20, graphStartY + getRatio(listValue.get(i)), null);
+                canvas.drawBitmap(defaultIcon, xRect.centerX() - defaultIcon.getWidth() / 2, graphStartY + getRatio(listValue.get(i)), null);
             }
 //            drawPoint(canvas, xRect, getRatio(listValue.get(i)));
             pointRectList.add(xRect.centerX());
@@ -207,7 +224,7 @@ public class MyGraphView extends View {
 
             yRect.set(graphStartX, yRectStart, graphWidth, yRectStart + yRectHeight);
             endYAxis = yRectStart + yRectHeight;
-            canvas.drawLine(yRect.left + graphWidth * 0.067f, yRect.centerY(), yRect.right, yRect.centerY(), paint);
+            canvas.drawLine(yRect.left + graphWidth * 0.067f, yRect.centerY(), totalWidth, yRect.centerY(), paint);
             if (strYValue[i].length() > 2) {
                 canvas.drawText(strYValue[i], yRect.left, yRect.centerY() - textMargin, textPaint);
             } else {
@@ -215,9 +232,8 @@ public class MyGraphView extends View {
             }
             yRectStart = yRectStart + yRectMargin;
         }
-
         paint.setColor(getResources().getColor(R.color.color_e4e4e4));
-        canvas.drawLine(getLeft(), endYAxis + graphHeight * 0.12f, graphWidth, endYAxis + graphHeight * 0.12f, paint);
+        canvas.drawLine(getLeft(), endYAxis + graphHeight * 0.12f, totalWidth, endYAxis + graphHeight * 0.12f, paint);
     }
 
     @Override
@@ -227,8 +243,7 @@ public class MyGraphView extends View {
 
         switch (action) {
             case MotionEvent.ACTION_UP:
-
-                for (int i = 0; i < 6; i++) {
+                for (int i = 0; i < listValue.size(); i++) {
                     if (pointRectList.get(i) + 100 > x && pointRectList.get(i) - 100 < x) {
                         selectLine = i;
                         invalidate();
@@ -239,4 +254,5 @@ public class MyGraphView extends View {
         }
         return true;
     }
+
 }

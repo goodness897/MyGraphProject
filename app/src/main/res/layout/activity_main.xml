@@ -7,15 +7,13 @@
     android:background="#fefdfb"
     tools:context="com.example.goodn.mygraphexample.MainActivity">
 
-    <LinearLayout
-        android:id="@+id/ll_graph"
+    <HorizontalScrollView
+        android:scrollbars="none"
+        android:id="@+id/hsv_graph"
         android:layout_width="match_parent"
-        android:layout_height="267dp"
-        android:layout_gravity="center"
-        android:orientation="vertical">
+        android:layout_height="267dp">
 
-
-    </LinearLayout>
+    </HorizontalScrollView>
 
 
 </FrameLayout>
