@@ -22,17 +22,26 @@ public class MainActivity extends AppCompatActivity {
         list.add(80);
         list.add(70);
         list.add(40);
+
         list.add(30);
         list.add(60);
         list.add(60);
         list.add(60);
+
         list.add(60);
         list.add(60);
         list.add(60);
         list.add(60);
+
         HorizontalScrollView horizontalScrollView = (HorizontalScrollView) findViewById(R.id.hsv_graph);
+        HorizontalScrollView horizontalScrollViewS = (HorizontalScrollView) findViewById(R.id.hsv_graph_second);
+        HorizontalScrollView horizontalScrollViewT = (HorizontalScrollView) findViewById(R.id.hsv_graph_third);
 //        llGraph = (LinearLayout) findViewById(R.id.ll_graph);
         MyGraphView myGraphView = new MyGraphView(this, list);
+        MyGraphView myGraphView2 = new MyGraphView(this, list);
+        MyGraphView myGraphView3 = new MyGraphView(this, list);
         horizontalScrollView.addView(myGraphView);
+        horizontalScrollViewS.addView(myGraphView2);
+        horizontalScrollViewT.addView(myGraphView3);
     }
 }
